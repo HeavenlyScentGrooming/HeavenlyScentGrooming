@@ -1471,8 +1471,11 @@
         <!-- Form -->
         <div class="fade-up fade-up-delay-2">
           <div class="contact-form-wrap">
-            <form id="contact-form" action="https://hsg-form.ebonyirismedia.workers.dev" method="POST" id="contact-form">
-              <input type="hidden" name="honeypot" style="display:none" />
+            <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" id="contact-form">
+              <input type="hidden" name="access_key" value="a8b1c2d3-placeholder-replace-with-real-key" />
+              <input type="hidden" name="subject" value="New Appointment Request – Heavenly Scent Grooming" />
+              <input type="hidden" name="from_name" value="Heavenly Scent Website" />
+              <input type="checkbox" name="botcheck" style="display:none" />
 
               <div class="form-row">
                 <div class="form-group">
@@ -1543,8 +1546,9 @@
         <li><a href="#home" onclick="smoothScroll(event,'#home')">Home</a></li>
         <li><a href="#services" onclick="smoothScroll(event,'#services')">Services</a></li>
         <li><a href="#about" onclick="smoothScroll(event,'#about')">About</a></li>
-        <li><a href="#pricing" onclick="smoothScroll(event,'#pricing')">Pricing</a></li>
-        <li><a href="#locations" onclick="smoothScroll(event,'#locations')">Locations</a></li>
+        <li><a href="#home" onclick="smoothScroll(event,'#home')">Home</a></li>
+        <li><a href="#services" onclick="smoothScroll(event,'#services')">Services</a></li>
+        <li><a href="#about" onclick="smoothScroll(event,'#about')">About</a></li>
         <li><a href="#pricing" onclick="smoothScroll(event,'#pricing')">Pricing</a></li>
         <li><a href="#locations" onclick="smoothScroll(event,'#locations')">Locations</a></li>
         <li><a href="#contact" onclick="smoothScroll(event,'#contact')">Contact</a></li>
@@ -1611,7 +1615,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('https://hsg-form.ebonyirismedia.workers.dev', {
+        const res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
           body: new FormData(this)
         });
