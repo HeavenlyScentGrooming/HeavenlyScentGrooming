@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     /* =====================================================
        DESIGN SYSTEM: "Modern Pet Luxe"
@@ -1412,7 +1413,7 @@
 
       <!-- Google Map -->
       <div class="fade-up" style="border-radius:1rem;overflow:hidden;border:2px solid rgba(201,169,110,0.3);max-width:900px;margin:0 auto;">
-        <div id="service-map" style="height:480px;width:100%;background:url(images/service-area-map.jpg) center/cover no-repeat;"></div>
+        <div id="service-map" style="height:480px;width:100%;"></div>
       </div>
       <p class="fade-up" style="text-align:center;color:rgba(255,255,255,0.35);font-size:0.75rem;margin-top:1rem;font-style:italic;">Tap markers for location details</p>
     </div>
@@ -1630,101 +1631,82 @@
       }
     });
   </script>
-
-
-  <!-- Google Maps — replace AIzaSyBlt3RoZoBuQKTYC1ufX0zx0OzQCxzZmoM with your key -->
-  <!-- Get one free at: console.cloud.google.com → Maps JavaScript API -->
-  <script>
-    function initMap() {
-      var center = { lat: 42.22, lng: -83.76 };
-
-      var map = new google.maps.Map(document.getElementById("service-map"), {
-        zoom: 10,
-        center: center,
-        mapTypeId: "roadmap",
-        styles: [
-          { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#1a2a3a" }] },
-          { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9dde8" }] },
-          { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f5f2ec" }] },
-          { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#d4a84b" }, { weight: 1.5 }] },
-          { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#ddd" }] },
-          { featureType: "poi", elementType: "all", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", elementType: "all", stylers: [{ visibility: "off" }] }
-        ],
-        disableDefaultUI: false,
-        zoomControl: true,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true
-      });
-
-      // Service area boundary — traced from territory map
-      var serviceArea = new google.maps.Polygon({
-        paths: [
-          { lat: 42.330, lng: -84.030 },
-          { lat: 42.340, lng: -83.960 },
-          { lat: 42.345, lng: -83.870 },
-          { lat: 42.345, lng: -83.780 },
-          { lat: 42.340, lng: -83.690 },
-          { lat: 42.325, lng: -83.610 },
-          { lat: 42.280, lng: -83.575 },
-          { lat: 42.240, lng: -83.575 },
-          { lat: 42.160, lng: -83.575 },
-          { lat: 42.075, lng: -83.590 },
-          { lat: 42.065, lng: -83.670 },
-          { lat: 42.080, lng: -83.760 },
-          { lat: 42.130, lng: -83.830 },
-          { lat: 42.160, lng: -83.880 },
-          { lat: 42.220, lng: -83.970 },
-          { lat: 42.285, lng: -84.015 },
-          { lat: 42.330, lng: -84.030 }
-        ],
-        strokeColor: "#C9A96E",
-        strokeOpacity: 1.0,
-        strokeWeight: 5,
-        fillColor: "#C9A96E",
-        fillOpacity: 0.15,
-        map: map
-      });
-
-      // Location markers
-      var locations = [
-        { name: "Downtown Chelsea",                  lat: 42.3181, lng: -84.0195 },
-        { name: "Downtown Saline",                   lat: 42.1667, lng: -83.7816 },
-        { name: "Downtown Milan",                    lat: 42.0853, lng: -83.6786 },
-        { name: "Superior Township (Select Areas)",  lat: 42.295,  lng: -83.620  },
-        { name: "Ann Arbor",                         lat: 42.2808, lng: -83.7430 },
-        { name: "Ypsilanti",                         lat: 42.2411, lng: -83.6130 }
-      ];
-
-      var infoWindow = new google.maps.InfoWindow();
-
-      locations.forEach(function(loc) {
-        var marker = new google.maps.Marker({
-          position: { lat: loc.lat, lng: loc.lng },
-          map: map,
-          title: loc.name,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#C9A96E",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2.5
-          }
-        });
-
-        marker.addListener("click", function() {
-          infoWindow.setContent(
-            "<div style=\"font-family:sans-serif;padding:4px 6px;\"><strong style=\"color:#0F2A4A;font-size:13px;\">" + loc.name + "</strong><br><span style=\"font-size:12px;color:#888;\">Heavenly Scent Service Area</span></div>"
-          );
-          infoWindow.open(map, marker);
-        });
-      });
-    }
-  </script>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlt3RoZoBuQKTYC1ufX0zx0OzQCxzZmoM&callback=initMap">
+  </script>
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (function() {
+      var map = L.map('service-map', {
+        center: [42.22, -83.76],
+        zoom: 10,
+        scrollWheelZoom: false
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Service area boundary
+      L.polygon([
+        [42.338, -84.028],
+        [42.348, -84.028],
+        [42.350, -83.950],
+        [42.350, -83.860],
+        [42.350, -83.760],
+        [42.348, -83.680],
+        [42.335, -83.600],
+        [42.295, -83.582],
+        [42.250, -83.580],
+        [42.200, -83.580],
+        [42.155, -83.580],
+        [42.095, -83.595],
+        [42.070, -83.650],
+        [42.070, -83.720],
+        [42.085, -83.800],
+        [42.105, -83.845],
+        [42.148, -83.875],
+        [42.175, -83.910],
+        [42.215, -83.975],
+        [42.255, -84.028],
+        [42.295, -84.028],
+        [42.295, -83.980],
+        [42.310, -83.980],
+        [42.310, -84.028],
+        [42.338, -84.028]
+      ], {
+        color: '#C9A96E',
+        weight: 5,
+        opacity: 1.0,
+        fillColor: '#C9A96E',
+        fillOpacity: 0.15
+      }).addTo(map);
+
+      // Gold pin icon
+      var goldIcon = L.divIcon({
+        className: '',
+        html: '<div style="width:14px;height:14px;background:#C9A96E;border:2.5px solid white;border-radius:50%;box-shadow:0 0 8px rgba(201,169,110,0.8);"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
+
+      [
+        { name: 'Downtown Chelsea',                 lat: 42.3181, lng: -84.0195 },
+        { name: 'Downtown Saline',                  lat: 42.1667, lng: -83.7816 },
+        { name: 'Downtown Milan',                   lat: 42.0853, lng: -83.6786 },
+        { name: 'Superior Township (Select Areas)', lat: 42.295,  lng: -83.620  },
+        { name: 'Ann Arbor',                        lat: 42.2808, lng: -83.7430 },
+        { name: 'Ypsilanti',                        lat: 42.2411, lng: -83.6130 }
+      ].forEach(function(loc) {
+        L.marker([loc.lat, loc.lng], { icon: goldIcon })
+          .bindPopup('<strong style="font-family:sans-serif;color:#0F2A4A;font-size:13px;">' + loc.name + '</strong><br><span style="font-size:11px;color:#888;">Heavenly Scent Service Area</span>')
+          .addTo(map);
+      });
+    })();
   </script>
 
 </body>
