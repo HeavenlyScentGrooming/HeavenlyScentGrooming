@@ -1471,11 +1471,12 @@
         <!-- Form -->
         <div class="fade-up fade-up-delay-2">
           <div class="contact-form-wrap">
-            <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" id="contact-form">
-              <input type="hidden" name="access_key" value="a8b1c2d3-placeholder-replace-with-real-key" />
-              <input type="hidden" name="subject" value="New Appointment Request – Heavenly Scent Grooming" />
-              <input type="hidden" name="from_name" value="Heavenly Scent Website" />
-              <input type="checkbox" name="botcheck" style="display:none" />
+            <form id="contact-form" action="https://formsubmit.co/heavenlyscentmobile@gmail.com" method="POST" id="contact-form">
+              <input type="hidden" name="_subject" value="New Appointment Request – Heavenly Scent Grooming" />
+              <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_next" value="https://heavenlyscentgrooming.pages.dev#contact" />
+              <input type="text" name="_honey" style="display:none" />
 
               <div class="form-row">
                 <div class="form-group">
@@ -1615,12 +1616,11 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('https://api.web3forms.com/submit', {
+        const res = await fetch('https://formsubmit.co/heavenlyscentmobile@gmail.com', {
           method: 'POST',
           body: new FormData(this)
         });
-        const data = await res.json();
-        if (data.success) {
+        if (res.ok) {
           this.style.display = 'none';
           document.getElementById('form-success').style.display = 'block';
         } else {
