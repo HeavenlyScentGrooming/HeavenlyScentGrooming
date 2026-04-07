@@ -99,8 +99,8 @@ export default {
       });
 
       // ── 2. Google Sheets via Apps Script webhook ─────────────────────────
-      const sheetsPromise = env.SHEETS_WEBHOOK_URL
-        ? fetch(env.SHEETS_WEBHOOK_URL, {
+      const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyJZkfTLAsv-4C-Zv_9-joFpcOis1VESWWFFzBSpE4SL1WlqoNrkOp6w2hyvsOpQqFiIg/exec";
+      const sheetsPromise = fetch(SHEETS_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -113,8 +113,7 @@ export default {
               breedSize,
               message,
             }),
-          })
-        : Promise.resolve();
+          });
 
       // Fire both in parallel
       const [mailRes] = await Promise.all([mailPromise, sheetsPromise]);
