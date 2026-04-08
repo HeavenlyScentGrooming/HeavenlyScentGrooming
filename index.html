@@ -1471,12 +1471,8 @@
         <!-- Form -->
         <div class="fade-up fade-up-delay-2">
           <div class="contact-form-wrap">
-            <form id="contact-form" action="https://formsubmit.co/04c328cac15955e26d50593d7495f04d" method="POST" id="contact-form">
-              <input type="hidden" name="_subject" value="New Appointment Request – Heavenly Scent Grooming" />
-              <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_template" value="table" />
-              <input type="hidden" name="_next" value="https://heavenlyscentgrooming.pages.dev#contact" />
-              <input type="text" name="_honey" style="display:none" />
+            <form id="contact-form" id="contact-form">
+              <input type="hidden" name="honeypot" style="display:none" />
 
               <div class="form-row">
                 <div class="form-group">
@@ -1616,11 +1612,12 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('https://formsubmit.co/04c328cac15955e26d50593d7495f04d', {
+        const res = await fetch('https://hsg-form.ebonyirismedia.workers.dev', {
           method: 'POST',
           body: new FormData(this)
         });
-        if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
           this.style.display = 'none';
           document.getElementById('form-success').style.display = 'block';
         } else {
