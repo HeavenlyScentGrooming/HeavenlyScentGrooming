@@ -1067,24 +1067,26 @@
     .fade-up {
       opacity: 1;
       transform: translateY(0);
-      transition: opacity 0.7s ease, transform 0.7s ease;
     }
 
-    .js-animations .fade-up {
-      opacity: 0;
-      transform: translateY(30px);
-    }
+    @media (prefers-reduced-motion: no-preference) {
+      .fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.7s ease, transform 0.7s ease;
+      }
 
-    .js-animations .fade-up.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+      .fade-up.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
 
-    .fade-up-delay-1 { transition-delay: 0.1s; }
-    .fade-up-delay-2 { transition-delay: 0.2s; }
-    .fade-up-delay-3 { transition-delay: 0.3s; }
-    .fade-up-delay-4 { transition-delay: 0.4s; }
-    .fade-up-delay-5 { transition-delay: 0.5s; }
+      .fade-up-delay-1 { transition-delay: 0.1s; }
+      .fade-up-delay-2 { transition-delay: 0.2s; }
+      .fade-up-delay-3 { transition-delay: 0.3s; }
+      .fade-up-delay-4 { transition-delay: 0.4s; }
+      .fade-up-delay-5 { transition-delay: 0.5s; }
+    }
 
     /* =====================================================
        RESPONSIVE
@@ -1125,7 +1127,6 @@
   </style>
 </head>
 <body>
-<script>document.body.classList.add('js-animations');</script>
 
   <!-- =====================================================
        NAVIGATION
@@ -1291,7 +1292,7 @@
       <!-- Why Mobile Grooming -->
       <div class="about-grid fade-up" style="direction:rtl">
         <div class="about-image-wrap" style="direction:ltr">
-          <img src="images/about.jpg" alt="Jill Fischer with a happy dog" loading="lazy" width="560" height="480" />
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/dog_closeup_fcf919b1.png" alt="Happy dog close-up" loading="lazy" width="560" height="480" />
           <div class="about-image-accent teal"></div>
         </div>
         <div style="direction:ltr">
@@ -1649,17 +1650,20 @@
     }
 
     // ---- Scroll Animations ----
-    const fadeEls = document.querySelectorAll('.fade-up');
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-      }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-      fadeEls.forEach(el => observer.observe(el));
-      // Safety fallback: if animations haven't fired after 2.5s, show everything
-      setTimeout(() => { fadeEls.forEach(el => el.classList.add('visible')); }, 2500);
-    } else {
-      // No IntersectionObserver support — show everything immediately
-      fadeEls.forEach(el => el.classList.add('visible'));
+    // Only animate for users who haven't set prefers-reduced-motion
+    const motionOK = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    if (motionOK) {
+      const fadeEls = document.querySelectorAll('.fade-up');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+        }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+        fadeEls.forEach(el => observer.observe(el));
+        // Safety: guarantee visibility after 2s regardless
+        setTimeout(() => { fadeEls.forEach(el => el.classList.add('visible')); }, 2000);
+      } else {
+        fadeEls.forEach(el => el.classList.add('visible'));
+      }
     }
 
     // ---- Form Submission ----
