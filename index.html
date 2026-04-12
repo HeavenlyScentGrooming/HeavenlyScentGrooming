@@ -5,6 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Heavenly Scent Grooming – Mobile Pet Grooming</title>
   <meta name="description" content="Experienced, reliable, hassle-free mobile pet grooming for Ann Arbor and surrounding areas. Dogs and cats welcome." />
+  <link rel="canonical" href="https://heavenlyscentgrooming.pages.dev/" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Heavenly Scent Grooming – Mobile Pet Grooming" />
+  <meta property="og:description" content="Experienced, reliable, hassle-free mobile pet grooming for Ann Arbor and surrounding areas. Dogs and cats welcome." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://heavenlyscentgrooming.pages.dev/" />
+  <meta property="og:image" content="https://heavenlyscentgrooming.pages.dev/images/hero.jpg" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Heavenly Scent Grooming" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" type="image/png" />
+  <link rel="apple-touch-icon" href="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Heavenly Scent Grooming",
+    "description": "Experienced, reliable, hassle-free mobile pet grooming for Ann Arbor and surrounding areas.",
+    "url": "https://heavenlyscentgrooming.pages.dev",
+    "telephone": "+1-734-218-6141",
+    "image": "https://heavenlyscentgrooming.pages.dev/images/hero.jpg",
+    "priceRange": "$50–$300",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Ann Arbor",
+      "addressRegion": "MI",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 42.2808,
+      "longitude": -83.7430
+    },
+    "areaServed": [
+      "Ann Arbor", "Ypsilanti", "Chelsea", "Saline", "Milan", "Superior Township"
+    ],
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "08:00",
+      "closes": "17:00"
+    },
+    "sameAs": []
+  }
+  </script>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -247,7 +296,6 @@
       background-image: url('images/hero.jpg');
       background-position: center 60%;
       background-size: cover;
-      background-position: center 60%;
     }
 
     .hero-overlay {
@@ -1017,12 +1065,17 @@
     ===================================================== */
 
     .fade-up {
-      opacity: 0;
-      transform: translateY(30px);
+      opacity: 1;
+      transform: translateY(0);
       transition: opacity 0.7s ease, transform 0.7s ease;
     }
 
-    .fade-up.visible {
+    .js-animations .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .js-animations .fade-up.visible {
       opacity: 1;
       transform: translateY(0);
     }
@@ -1072,6 +1125,7 @@
   </style>
 </head>
 <body>
+<script>document.body.classList.add('js-animations');</script>
 
   <!-- =====================================================
        NAVIGATION
@@ -1079,7 +1133,7 @@
   <nav class="nav" id="main-nav">
     <div class="container nav-inner">
       <a href="#home" class="nav-logo" onclick="smoothScroll(event,'#home')">
-        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" alt="Heavenly Scent Grooming" />
+        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" alt="Heavenly Scent Grooming" width="64" height="64" />
       </a>
       <ul class="nav-links">
         <li><a href="#home" onclick="smoothScroll(event,'#home')">Home</a></li>
@@ -1220,7 +1274,7 @@
       <!-- Who We Are -->
       <div class="about-grid fade-up">
         <div class="about-image-wrap">
-          <img src="images/about.jpg" alt="Professional pet groomer with a freshly bathed dog" loading="eager" />
+          <img src="images/about.jpg" alt="Professional pet groomer with a freshly bathed dog" loading="eager" width="560" height="480" />
           <div class="about-image-accent"></div>
         </div>
         <div>
@@ -1237,7 +1291,7 @@
       <!-- Why Mobile Grooming -->
       <div class="about-grid fade-up" style="direction:rtl">
         <div class="about-image-wrap" style="direction:ltr">
-          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/dog_closeup_fcf919b1.png" alt="Happy dog close-up" loading="lazy" />
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/dog_closeup_fcf919b1.png" alt="Happy dog close-up" loading="lazy" width="560" height="480" />
           <div class="about-image-accent teal"></div>
         </div>
         <div style="direction:ltr">
@@ -1471,7 +1525,7 @@
         <!-- Form -->
         <div class="fade-up fade-up-delay-2">
           <div class="contact-form-wrap">
-            <form id="contact-form" id="contact-form">
+            <form id="contact-form">
               <input type="hidden" name="honeypot" style="display:none" />
 
               <div class="form-row">
@@ -1537,12 +1591,9 @@
   <footer>
     <div class="container">
       <div class="footer-logo">
-        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" alt="Heavenly Scent Grooming" loading="lazy" />
+        <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663058348153/Nwwf6vj4gmUTTGVUuW2HZt/logo_434f2887.png" alt="Heavenly Scent Grooming" loading="lazy" width="120" height="120" />
       </div>
       <ul class="footer-nav">
-        <li><a href="#home" onclick="smoothScroll(event,'#home')">Home</a></li>
-        <li><a href="#services" onclick="smoothScroll(event,'#services')">Services</a></li>
-        <li><a href="#about" onclick="smoothScroll(event,'#about')">About</a></li>
         <li><a href="#home" onclick="smoothScroll(event,'#home')">Home</a></li>
         <li><a href="#services" onclick="smoothScroll(event,'#services')">Services</a></li>
         <li><a href="#about" onclick="smoothScroll(event,'#about')">About</a></li>
@@ -1598,11 +1649,18 @@
     }
 
     // ---- Scroll Animations ----
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
-
-    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    const fadeEls = document.querySelectorAll('.fade-up');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+      }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+      fadeEls.forEach(el => observer.observe(el));
+      // Safety fallback: if animations haven't fired after 2.5s, show everything
+      setTimeout(() => { fadeEls.forEach(el => el.classList.add('visible')); }, 2500);
+    } else {
+      // No IntersectionObserver support — show everything immediately
+      fadeEls.forEach(el => el.classList.add('visible'));
+    }
 
     // ---- Form Submission ----
     document.getElementById('contact-form').addEventListener('submit', async function(e) {
@@ -1632,11 +1690,6 @@
       }
     });
   </script>
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBlt3RoZoBuQKTYC1ufX0zx0OzQCxzZmoM&callback=initMap">
-  </script>
-
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     (function() {
