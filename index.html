@@ -1064,29 +1064,23 @@
        ANIMATIONS
     ===================================================== */
 
-    .fade-up {
+    /* fade-up: content visible by default; JS adds .has-animations to <html> to enable */
+    .has-animations .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .has-animations .fade-up.visible {
       opacity: 1;
       transform: translateY(0);
     }
 
-    @media (prefers-reduced-motion: no-preference) {
-      .fade-up {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: opacity 0.7s ease, transform 0.7s ease;
-      }
-
-      .fade-up.visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .fade-up-delay-1 { transition-delay: 0.1s; }
-      .fade-up-delay-2 { transition-delay: 0.2s; }
-      .fade-up-delay-3 { transition-delay: 0.3s; }
-      .fade-up-delay-4 { transition-delay: 0.4s; }
-      .fade-up-delay-5 { transition-delay: 0.5s; }
-    }
+    .has-animations .fade-up-delay-1 { transition-delay: 0.1s; }
+    .has-animations .fade-up-delay-2 { transition-delay: 0.2s; }
+    .has-animations .fade-up-delay-3 { transition-delay: 0.3s; }
+    .has-animations .fade-up-delay-4 { transition-delay: 0.4s; }
+    .has-animations .fade-up-delay-5 { transition-delay: 0.5s; }
 
     /* =====================================================
        RESPONSIVE
@@ -1649,21 +1643,20 @@
       document.getElementById('icon-close').style.display = 'none';
     }
 
-    // ---- Scroll Animations ----
-    // Only animate for users who haven't set prefers-reduced-motion
+    // ---- Scroll Animations (progressive enhancement) ----
+    // Content is visible by default. We only add .has-animations to <html>
+    // if: (a) user allows motion, (b) IntersectionObserver exists.
+    // This ensures content is NEVER hidden if JS fails or motion is reduced.
     const motionOK = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
-    if (motionOK) {
+    if (motionOK && 'IntersectionObserver' in window) {
+      document.documentElement.classList.add('has-animations');
       const fadeEls = document.querySelectorAll('.fade-up');
-      if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-        }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
-        fadeEls.forEach(el => observer.observe(el));
-        // Safety: guarantee visibility after 2s regardless
-        setTimeout(() => { fadeEls.forEach(el => el.classList.add('visible')); }, 2000);
-      } else {
-        fadeEls.forEach(el => el.classList.add('visible'));
-      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+      }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+      fadeEls.forEach(el => observer.observe(el));
+      // Safety: guarantee visibility after 3s regardless
+      setTimeout(() => { fadeEls.forEach(el => el.classList.add('visible')); }, 3000);
     }
 
     // ---- Form Submission ----
