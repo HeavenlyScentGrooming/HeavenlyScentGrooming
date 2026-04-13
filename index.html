@@ -1668,7 +1668,7 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('https://hsg-form.ebonyirismedia.workers.dev', {
+        const res = await fetch('/api/contact', {
           method: 'POST',
           body: new FormData(this)
         });
