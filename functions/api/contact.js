@@ -1,33 +1,24 @@
 /**
- * Cloudflare Pages Function — POST /api/contact
+ * POST /api/contact — save lead to D1, email Jill via Gmail SMTP (immediate, Reply-To = customer).
  *
- * Forwards the form to your Google Apps Script web app, which:
- *   • Sends the lead to Jill’s email (MailApp)
- *   • Adds a row to the HSG Leads sheet
+ * Cloudflare Pages → Production (and Preview if needed):
+ *   GMAIL_SMTP_USER          — Jill’s Gmail address (same account as the app password)
+ *   GMAIL_SMTP_APP_PASSWORD  — Gmail “App password” (store as Secret)
+ *   GMAIL_FROM_NAME          — optional display name for From:
  *
- * Cloudflare Pages → Settings → Environment variables (Production):
- *   SHEETS_WEBHOOK_URL = full Web App URL ending in /exec
- * (Create the script from worker/google-sheets-webhook.js — see file header.)
+ * Lead mail always goes to heavenlyscentmobile@gmail.com (hardcoded in lead-pipeline.js).
+ * Bind D1 as DB and run schema/leads.sql.
+ *
+ * Gmail: https://support.google.com/accounts/answer/185833
  */
+
+import { insertLead, sendLeadNotification } from "../shared/lead-pipeline.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-
-function webhookResponseOk(status, bodyText) {
-  if (status < 200 || status >= 300) return false;
-  const t = (bodyText || "").trim();
-  if (!t) return false;
-  if (/page not found|does not exist|file you have requested/i.test(t)) return false;
-  try {
-    const j = JSON.parse(t);
-    return j.success === true;
-  } catch {
-    return false;
-  }
-}
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -44,22 +35,12 @@ export async function onRequest(context) {
   }
 
   try {
-    const formData = await request.formData();
-
-    if (formData.get("honeypot")) {
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const webhookUrl = env.SHEETS_WEBHOOK_URL;
-    if (!webhookUrl || typeof webhookUrl !== "string") {
-      console.error("SHEETS_WEBHOOK_URL is not set in Pages environment.");
+    if (!env.DB) {
       return new Response(
         JSON.stringify({
           success: false,
           error:
-            "Form is not configured yet. Set SHEETS_WEBHOOK_URL in Cloudflare Pages (Apps Script web app URL).",
+            "Database not configured. Bind a D1 database to this project as DB and run schema/leads.sql.",
         }),
         {
           status: 500,
@@ -68,50 +49,61 @@ export async function onRequest(context) {
       );
     }
 
-    const firstName = formData.get("firstName") || "";
-    const lastName = formData.get("lastName") || "";
-    const email = formData.get("email") || "";
-    const phone = formData.get("phone") || "";
-    const breedSize = formData.get("breedSize") || "";
-    const serviceType = formData.get("serviceType") || "";
-    const message = formData.get("message") || "";
-    const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Detroit" });
+    const formData = await request.formData();
 
-    const payload = {
-      timestamp,
-      firstName,
-      lastName,
-      email,
-      phone,
-      serviceType,
-      breedSize,
-      message,
-    };
-
-    const hookRes = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const text = await hookRes.text();
-
-    if (webhookResponseOk(hookRes.status, text)) {
+    if (formData.get("honeypot")) {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.error("Apps Script webhook failed:", hookRes.status, text.slice(0, 500));
-    let detail = "Could not deliver your request.";
-    try {
-      const j = JSON.parse(text);
-      if (j.error) detail = j.error;
-    } catch {
-      /* ignore */
+    const first_name = String(formData.get("firstName") || "").trim();
+    const last_name = String(formData.get("lastName") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const breed_size = String(formData.get("breedSize") || "").trim();
+    const service_type = String(formData.get("serviceType") || "").trim();
+    const message = String(formData.get("message") || "").trim();
+    const created_at = new Date().toISOString();
+
+    if (!first_name || !last_name || !email || !phone || !breed_size || !service_type || !message) {
+      return new Response(JSON.stringify({ success: false, error: "Please fill in all required fields." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
-    return new Response(JSON.stringify({ success: false, error: detail }), {
-      status: 500,
+
+    const row = {
+      created_at,
+      first_name,
+      last_name,
+      email,
+      phone,
+      service_type,
+      breed_size,
+      message,
+    };
+
+    await insertLead(env.DB, row);
+
+    try {
+      await sendLeadNotification(env, row);
+    } catch (mailErr) {
+      console.error("Gmail SMTP error:", mailErr);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error:
+            "Your request was saved but email could not be sent. Check GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD (Gmail App Password).",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

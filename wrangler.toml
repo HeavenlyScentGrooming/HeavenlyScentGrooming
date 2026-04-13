@@ -1,0 +1,16 @@
+# Optional: use with `npx wrangler pages dev .` after binding D1 as DB in the dashboard.
+# Production bindings (D1, env vars, cron) are usually set in the Cloudflare dashboard for this project.
+
+name = "heavenlyscentgrooming"
+compatibility_date = "2025-04-13"
+pages_build_output_dir = "."
+
+# Uncomment after `wrangler d1 create hsg-leads` and applying schema/leads.sql:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "hsg-leads"
+# database_id = "<paste-id-here>"
+
+# Uncomment to store cron in repo (or add the same schedule under Triggers in the dashboard):
+# [triggers]
+# crons = ["0 14 * * *"]
