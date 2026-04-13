@@ -1,15 +1,22 @@
 /**
  * Cloudflare Pages Function — POST /api/contact
- * Mirrors worker/hsg-form-worker.js on the site origin (no separate Worker hostname).
  *
- * Optional env in Pages project settings:
- *   SHEETS_WEBHOOK_URL — Apps Script /exec URL (defaults to deployed script below)
+ * Cloudflare Pages → Settings → Environment variables (production):
+ *   SHEETS_WEBHOOK_URL — Apps Script Web App /exec URL (required if sheet logging is used)
+ *   RESEND_API_KEY — https://resend.com API key (recommended for email)
+ *   RESEND_FROM — optional, e.g. "Heavenly Scent <mail@yourdomain.com>"
+ * If RESEND_FROM is unset, uses onboarding@resend.dev. For testing without a domain, create the
+ * Resend account with the same address as RECIPIENT_EMAIL so test sends are allowed.
+ *
+ * Without RESEND_API_KEY, email goes through MailChannels; the From address must be on a zone
+ * in this Cloudflare account with SPF: include:relay.mailchannels.net
+ *   MAIL_FROM_EMAIL, MAIL_FROM_NAME — optional overrides for MailChannels
  */
 
 const RECIPIENT_EMAIL = "heavenlyscentmobile@gmail.com";
 const RECIPIENT_NAME = "Jill Fischer – Heavenly Scent Grooming";
-const SENDER_EMAIL = "noreply@heavenlyscentgrooming.pages.dev";
-const SENDER_NAME = "Heavenly Scent Website";
+const DEFAULT_SENDER_EMAIL = "noreply@heavenlyscentgrooming.pages.dev";
+const DEFAULT_SENDER_NAME = "Heavenly Scent Website";
 
 const DEFAULT_SHEETS_URL =
   "https://script.google.com/macros/s/AKfycbyJZkfTLAsv-4C-Zv_9-joFpcOis1VESWWFFzBSpE4SL1WlqoNrkOp6w2hyvsOpQqFiIg/exec";
@@ -19,6 +26,67 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
+
+function mailChannelsFrom(env) {
+  return {
+    email: env.MAIL_FROM_EMAIL || DEFAULT_SENDER_EMAIL,
+    name: env.MAIL_FROM_NAME || DEFAULT_SENDER_NAME,
+  };
+}
+
+async function sendViaResend(env, { subject, plain, htmlBody, replyEmail, replyName }) {
+  const from = env.RESEND_FROM || "Heavenly Scent Grooming <onboarding@resend.dev>";
+  return fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [RECIPIENT_EMAIL],
+      reply_to: replyEmail,
+      subject,
+      text: plain,
+      html: htmlBody,
+    }),
+  });
+}
+
+async function sendViaMailChannels(env, { subject, plain, htmlBody, replyEmail, replyName }) {
+  const from = mailChannelsFrom(env);
+  return fetch("https://api.mailchannels.net/tx/v1/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      personalizations: [
+        {
+          to: [{ email: RECIPIENT_EMAIL, name: RECIPIENT_NAME }],
+          reply_to: { email: replyEmail, name: replyName },
+        },
+      ],
+      from,
+      subject,
+      content: [
+        { type: "text/plain", value: plain },
+        { type: "text/html", value: htmlBody },
+      ],
+    }),
+  });
+}
+
+function sheetsLooksSuccessful(status, bodyText) {
+  if (status < 200 || status >= 300) return false;
+  const t = (bodyText || "").trim();
+  if (!t) return false;
+  if (/page not found|does not exist|file you have requested/i.test(t)) return false;
+  try {
+    const j = JSON.parse(t);
+    return j.success === true;
+  } catch {
+    return true;
+  }
+}
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -53,6 +121,8 @@ export async function onRequest(context) {
     const fullName = `${firstName} ${lastName}`.trim();
     const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Detroit" });
 
+    const plain = `Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nService: ${serviceType}\nBreed/Size: ${breedSize}\nMessage: ${message}`;
+
     const htmlBody = `
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
   <div style="background:#0F2A4A;padding:20px 24px;border-radius:8px 8px 0 0;">
@@ -77,27 +147,12 @@ export async function onRequest(context) {
   </div>
 </div>`.trim();
 
-    const mailPromise = fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: RECIPIENT_EMAIL, name: RECIPIENT_NAME }],
-            reply_to: { email, name: fullName },
-          },
-        ],
-        from: { email: SENDER_EMAIL, name: SENDER_NAME },
-        subject: `New Appointment Request – ${serviceType} – ${fullName}`,
-        content: [
-          {
-            type: "text/plain",
-            value: `Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nService: ${serviceType}\nBreed/Size: ${breedSize}\nMessage: ${message}`,
-          },
-          { type: "text/html", value: htmlBody },
-        ],
-      }),
-    });
+    const subject = `New Appointment Request – ${serviceType} – ${fullName}`;
+    const mailPayload = { subject, plain, htmlBody, replyEmail: email, replyName: fullName };
+
+    const mailPromise = env.RESEND_API_KEY
+      ? sendViaResend(env, mailPayload)
+      : sendViaMailChannels(env, mailPayload);
 
     const sheetsUrl = env.SHEETS_WEBHOOK_URL || DEFAULT_SHEETS_URL;
     const sheetsPromise = fetch(sheetsUrl, {
@@ -115,20 +170,40 @@ export async function onRequest(context) {
       }),
     });
 
-    const [mailRes] = await Promise.all([mailPromise, sheetsPromise]);
+    const [mailRes, sheetsRes] = await Promise.all([mailPromise, sheetsPromise]);
+    const sheetsText = await sheetsRes.text();
 
-    if (mailRes.status === 202 || mailRes.status === 200) {
+    const mailOk = env.RESEND_API_KEY
+      ? mailRes.ok
+      : mailRes.status === 202 || mailRes.status === 200;
+
+    if (!mailOk) {
+      const errText = await mailRes.text();
+      console.error(env.RESEND_API_KEY ? "Resend error:" : "MailChannels error:", mailRes.status, errText);
+    }
+
+    const sheetsOk = sheetsLooksSuccessful(sheetsRes.status, sheetsText);
+    if (!sheetsOk) {
+      console.error("Sheets webhook error:", sheetsRes.status, sheetsText.slice(0, 200));
+    }
+
+    if (mailOk || sheetsOk) {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const err = await mailRes.text();
-    console.error("MailChannels error:", mailRes.status, err);
-    return new Response(JSON.stringify({ success: false, error: "Mail delivery failed" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error:
+          "Could not save your request. Add RESEND_API_KEY in Cloudflare Pages (see functions/api/contact.js) and set SHEETS_WEBHOOK_URL to a live Apps Script URL.",
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (err) {
     console.error("contact function error:", err);
     return new Response(JSON.stringify({ success: false, error: err.message }), {
