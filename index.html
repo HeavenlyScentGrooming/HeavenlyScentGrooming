@@ -1679,12 +1679,13 @@
         } else {
           btn.textContent = 'Submit Request';
           btn.disabled = false;
-          alert('Something went wrong. Please call us at (734) 218-6141.');
+          const msg = data.error ? String(data.error) : 'Something went wrong.';
+          alert(msg + '\n\nYou can also call (734) 218-6141.');
         }
       } catch {
         btn.textContent = 'Submit Request';
         btn.disabled = false;
-        alert('Something went wrong. Please call us at (734) 218-6141.');
+        alert('Could not reach the server. Please call (734) 218-6141.');
       }
     });
   </script>
