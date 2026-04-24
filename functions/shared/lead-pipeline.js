@@ -24,6 +24,8 @@ export function leadsToCsv(rows) {
     "last_name",
     "email",
     "phone",
+    "city",
+    "cross_streets",
     "service_type",
     "breed_size",
     "message",
@@ -38,6 +40,8 @@ export function leadsToCsv(rows) {
         csvEscape(r.last_name),
         csvEscape(r.email),
         csvEscape(r.phone),
+        csvEscape(r.city),
+        csvEscape(r.cross_streets),
         csvEscape(r.service_type),
         csvEscape(r.breed_size),
         csvEscape(r.message),
@@ -57,7 +61,7 @@ export function utf8ToBase64(str) {
 export async function fetchAllLeads(db) {
   const { results } = await db
     .prepare(
-      "SELECT id, created_at, first_name, last_name, email, phone, service_type, breed_size, message FROM leads ORDER BY id ASC"
+      "SELECT id, created_at, first_name, last_name, email, phone, city, cross_streets, service_type, breed_size, message FROM leads ORDER BY id ASC"
     )
     .all();
   return results || [];
@@ -66,8 +70,8 @@ export async function fetchAllLeads(db) {
 export async function insertLead(db, row) {
   await db
     .prepare(
-      `INSERT INTO leads (created_at, first_name, last_name, email, phone, service_type, breed_size, message)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO leads (created_at, first_name, last_name, email, phone, city, cross_streets, service_type, breed_size, message)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       row.created_at,
@@ -75,6 +79,8 @@ export async function insertLead(db, row) {
       row.last_name,
       row.email,
       row.phone,
+      row.city,
+      row.cross_streets,
       row.service_type,
       row.breed_size,
       row.message
@@ -108,6 +114,8 @@ export async function sendLeadNotification(env, lead) {
     `Name: ${fullName}\n` +
     `Email: ${lead.email}\n` +
     `Phone: ${lead.phone || "—"}\n` +
+    `City: ${lead.city || "—"}\n` +
+    `Cross Streets: ${lead.cross_streets || "—"}\n` +
     `Service: ${lead.service_type}\n` +
     `Breed / size: ${lead.breed_size || "—"}\n\n` +
     `Message:\n${lead.message || "—"}`;
@@ -120,6 +128,8 @@ export async function sendLeadNotification(env, lead) {
     `<tr><td><b>Name</b></td><td>${escapeHtml(fullName)}</td></tr>` +
     `<tr><td><b>Email</b></td><td>${escapeHtml(lead.email)}</td></tr>` +
     `<tr><td><b>Phone</b></td><td>${escapeHtml(lead.phone || "—")}</td></tr>` +
+    `<tr><td><b>City</b></td><td>${escapeHtml(lead.city || "—")}</td></tr>` +
+    `<tr><td><b>Cross Streets</b></td><td>${escapeHtml(lead.cross_streets || "—")}</td></tr>` +
     `<tr><td><b>Service</b></td><td>${escapeHtml(lead.service_type)}</td></tr>` +
     `<tr><td><b>Breed / size</b></td><td>${escapeHtml(lead.breed_size || "—")}</td></tr></table>` +
     `<p><b>Message</b></p><p>${escapeHtml(lead.message || "—").replace(/\n/g, "<br>")}</p></div>`;

@@ -14,3 +14,7 @@ CREATE TABLE IF NOT EXISTS leads (
 );
 
 CREATE INDEX IF NOT EXISTS idx_leads_created ON leads (created_at);
+
+-- Migration: add location fields
+ALTER TABLE leads ADD COLUMN city TEXT NOT NULL DEFAULT '';
+ALTER TABLE leads ADD COLUMN cross_streets TEXT NOT NULL DEFAULT '';

@@ -63,10 +63,12 @@ export async function onRequest(context) {
     const phone = String(formData.get("phone") || "").trim();
     const breed_size = String(formData.get("breedSize") || "").trim();
     const service_type = String(formData.get("serviceType") || "").trim();
-    const message = String(formData.get("message") || "").trim();
+    const message       = String(formData.get("message")      || "").trim();
+    const city          = String(formData.get("city")         || "").trim();
+    const cross_streets = String(formData.get("crossStreets") || "").trim();
     const created_at = new Date().toISOString();
 
-    if (!first_name || !last_name || !email || !phone || !breed_size || !service_type || !message) {
+    if (!first_name || !last_name || !email || !phone || !breed_size || !service_type || !message || !city || !cross_streets) {
       return new Response(JSON.stringify({ success: false, error: "Please fill in all required fields." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,6 +81,8 @@ export async function onRequest(context) {
       last_name,
       email,
       phone,
+      city,
+      cross_streets,
       service_type,
       breed_size,
       message,
