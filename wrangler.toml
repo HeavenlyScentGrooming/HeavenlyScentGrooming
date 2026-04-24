@@ -5,11 +5,10 @@ name = "heavenlyscentgrooming"
 compatibility_date = "2025-04-13"
 pages_build_output_dir = "."
 
-# Uncomment after `wrangler d1 create hsg-leads` and applying schema/leads.sql:
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "hsg-leads"
-# database_id = "<paste-id-here>"
+[[d1_databases]]
+binding = "DB"
+database_name = "hsg-leads"
+database_id = "1f97b12b-e938-4f7c-a3d8-6c9adcd6ffa9"
 
 # Uncomment to store cron in repo (or add the same schedule under Triggers in the dashboard):
 # [triggers]
