@@ -1,15 +1,7 @@
 /**
- * POST /api/contact — save lead to D1, email Jill via Gmail SMTP (immediate, Reply-To = customer).
- *
- * Cloudflare Pages → Production (and Preview if needed):
- *   GMAIL_SMTP_USER          — Jill’s Gmail address (same account as the app password)
- *   GMAIL_SMTP_APP_PASSWORD  — Gmail “App password” (store as Secret)
- *   GMAIL_FROM_NAME          — optional display name for From:
- *
- * Lead mail always goes to heavenlyscentmobile@gmail.com (hardcoded in lead-pipeline.js).
- * Bind D1 as DB and run schema/leads.sql.
- *
- * Gmail: https://support.google.com/accounts/answer/185833
+ * POST /api/contact — save lead to D1, email Jill via MailChannels (free, no password).
+ * Reply-To is set to the form submitter so Jill hits Reply and it goes to them.
+ * Requires: D1 binding as DB (hsg-leads database).
  */
 
 import { insertLead, sendLeadNotification } from "../shared/lead-pipeline.js";
@@ -93,7 +85,7 @@ export async function onRequest(context) {
     try {
       await sendLeadNotification(env, row);
     } catch (mailErr) {
-      console.error("Gmail SMTP error:", mailErr);
+      console.error("MailChannels error:", mailErr);
       return new Response(
         JSON.stringify({
           success: false,
