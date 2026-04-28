@@ -5,10 +5,8 @@
  * Mail is sent through Gmail’s SMTP using an App Password (TLS on port 465).
  */
 
-import { sendViaGmailSmtp } from "./gmail-smtp.js";
+import { sendLeadNotification as sendViaMailChannels } from "./mailchannels.js";
 
-/** Single inbox for lead alerts and CSV digests — not configurable via env (avoids misrouting). */
-const JILL_NOTIFY_EMAIL = "heavenlyscentmobile@gmail.com";
 
 export function csvEscape(value) {
   const s = value == null ? "" : String(value);
@@ -88,63 +86,12 @@ export async function insertLead(db, row) {
     .run();
 }
 
-function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 /**
  * Immediate lead notification (HTML + plain). Reply-To = customer email (so Jill can hit Reply).
  */
 export async function sendLeadNotification(env, lead) {
-  const fromEmail = env.GMAIL_SMTP_USER?.trim();
-  if (!fromEmail) {
-    throw new Error("GMAIL_SMTP_USER is not set.");
-  }
-
-  const to = JILL_NOTIFY_EMAIL;
-  const fullName = `${lead.first_name} ${lead.last_name}`.trim() || "(no name)";
-  const subject = `New appointment request — ${lead.service_type} — ${fullName}`;
-  const plain =
-    `New appointment request — Heavenly Scent website\n\n` +
-    `Time: ${lead.created_at}\n` +
-    `Name: ${fullName}\n` +
-    `Email: ${lead.email}\n` +
-    `Phone: ${lead.phone || "—"}\n` +
-    `City: ${lead.city || "—"}\n` +
-    `Cross Streets: ${lead.cross_streets || "—"}\n` +
-    `Service: ${lead.service_type}\n` +
-    `Breed / size: ${lead.breed_size || "—"}\n\n` +
-    `Message:\n${lead.message || "—"}`;
-
-  const html =
-    `<div style="font-family:Arial,sans-serif;max-width:600px;padding:16px;">` +
-    `<h2 style="color:#0F2A4A;">New appointment request</h2>` +
-    `<p style="color:#666;font-size:13px;">${escapeHtml(lead.created_at)}</p>` +
-    `<table style="font-size:14px;line-height:1.6;">` +
-    `<tr><td><b>Name</b></td><td>${escapeHtml(fullName)}</td></tr>` +
-    `<tr><td><b>Email</b></td><td>${escapeHtml(lead.email)}</td></tr>` +
-    `<tr><td><b>Phone</b></td><td>${escapeHtml(lead.phone || "—")}</td></tr>` +
-    `<tr><td><b>City</b></td><td>${escapeHtml(lead.city || "—")}</td></tr>` +
-    `<tr><td><b>Cross Streets</b></td><td>${escapeHtml(lead.cross_streets || "—")}</td></tr>` +
-    `<tr><td><b>Service</b></td><td>${escapeHtml(lead.service_type)}</td></tr>` +
-    `<tr><td><b>Breed / size</b></td><td>${escapeHtml(lead.breed_size || "—")}</td></tr></table>` +
-    `<p><b>Message</b></p><p>${escapeHtml(lead.message || "—").replace(/\n/g, "<br>")}</p></div>`;
-
-  await sendViaGmailSmtp(env, {
-    fromEmail,
-    fromName: env.GMAIL_FROM_NAME || "Heavenly Scent Website",
-    to,
-    toName: "Jill",
-    replyTo: lead.email || undefined,
-    replyToName: fullName || undefined,
-    subject,
-    textBody: plain,
-    htmlBody: html,
-  });
+  await sendViaMailChannels(env, lead);
 }
 
 /**
@@ -164,22 +111,5 @@ export async function sendLeadsCsvDigest(env) {
   const subject = `HSG leads export — ${date} (${rows.length} rows)`;
   const csvB64 = utf8ToBase64(csv);
 
-  await sendViaGmailSmtp(env, {
-    fromEmail,
-    fromName: env.GMAIL_FROM_NAME || "Heavenly Scent Website",
-    to,
-    toName: "Jill",
-    subject,
-    textBody:
-      `Attached: all leads from the website database as of ${date}.\n` +
-      `Import the CSV into your CRM. Row count: ${rows.length}.`,
-    htmlBody: `<p>Attached: all leads as of <b>${escapeHtml(date)}</b>. Rows: ${rows.length}. Import the CSV into your CRM.</p>`,
-    attachments: [
-      {
-        filename: `hsg-leads-${date}.csv`,
-        contentType: "text/csv; charset=utf-8",
-        base64: csvB64,
-      },
-    ],
-  });
+  await sendViaMailChannels(env, lead);
 }

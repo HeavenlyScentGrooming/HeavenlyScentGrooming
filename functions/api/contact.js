@@ -97,8 +97,7 @@ export async function onRequest(context) {
       return new Response(
         JSON.stringify({
           success: false,
-          error:
-            "Your request was saved but email could not be sent. Check GMAIL_SMTP_USER and GMAIL_SMTP_APP_PASSWORD (Gmail App Password).",
+          error: "Your request was saved but the notification email could not be sent. Please call (734) 218-6141.",
         }),
         {
           status: 500,
