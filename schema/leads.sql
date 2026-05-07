@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS leads (
   last_name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
+  cross_streets TEXT NOT NULL DEFAULT '',
+  city TEXT NOT NULL DEFAULT '',
   service_type TEXT NOT NULL,
   breed_size TEXT NOT NULL,
   message TEXT NOT NULL
