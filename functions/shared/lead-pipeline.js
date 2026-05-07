@@ -1,14 +1,17 @@
 /**
  * D1 + Gmail SMTP helpers for HSG leads (Cloudflare Pages Functions).
  *
- * Notifications go only to JILL_NOTIFY_EMAIL (hardcoded). No BCC/CC.
+ * Notifications go to LEAD_RECIPIENTS (hardcoded list). No BCC.
  * Mail is sent through Gmail’s SMTP using an App Password (TLS on port 465).
  */
 
 import { sendViaGmailSmtp } from "./gmail-smtp.js";
 
-/** Single inbox for lead alerts and CSV digests — not configurable via env (avoids misrouting). */
-const JILL_NOTIFY_EMAIL = "heavenlyscentmobile@gmail.com";
+/** Inboxes for lead alerts and CSV digests — not configurable via env (avoids misrouting). */
+const LEAD_RECIPIENTS = [
+  "heavenlyscentgrooming@gmail.com",
+  "ramayan@ebonyiris.com",
+];
 
 export function csvEscape(value) {
   const s = value == null ? "" : String(value);
@@ -105,7 +108,7 @@ export async function sendLeadNotification(env, lead) {
     throw new Error("GMAIL_SMTP_USER is not set.");
   }
 
-  const to = JILL_NOTIFY_EMAIL;
+  const to = LEAD_RECIPIENTS;
   const fullName = `${lead.first_name} ${lead.last_name}`.trim() || "(no name)";
   const subject = `New appointment request — ${lead.service_type} — ${fullName}`;
   const plain =
@@ -138,7 +141,6 @@ export async function sendLeadNotification(env, lead) {
     fromEmail,
     fromName: env.GMAIL_FROM_NAME || "Heavenly Scent Website",
     to,
-    toName: "Jill",
     replyTo: lead.email || undefined,
     replyToName: fullName || undefined,
     subject,
@@ -159,7 +161,7 @@ export async function sendLeadsCsvDigest(env) {
 
   const rows = await fetchAllLeads(db);
   const csv = leadsToCsv(rows);
-  const to = JILL_NOTIFY_EMAIL;
+  const to = LEAD_RECIPIENTS;
   const date = new Date().toISOString().slice(0, 10);
   const subject = `HSG leads export — ${date} (${rows.length} rows)`;
   const csvB64 = utf8ToBase64(csv);
@@ -168,7 +170,6 @@ export async function sendLeadsCsvDigest(env) {
     fromEmail,
     fromName: env.GMAIL_FROM_NAME || "Heavenly Scent Website",
     to,
-    toName: "Jill",
     subject,
     textBody:
       `Attached: all leads from the website database as of ${date}.\n` +
