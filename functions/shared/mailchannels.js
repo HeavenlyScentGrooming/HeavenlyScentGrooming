@@ -6,8 +6,10 @@
  * Docs: https://docs.mailchannels.net/transactional/getting-started
  */
 
-const JILL_EMAIL = "heavenlyscentmobile@gmail.com";
-const JILL_NAME  = "Jill Fischer – Heavenly Scent Grooming";
+const RECIPIENTS = [
+  { email: "heavenlyscentgrooming@gmail.com", name: "Heavenly Scent Grooming" },
+  { email: "ramayan@ebonyiris.com",           name: "Ramayan – Ebony Iris Media" },
+];
 const FROM_EMAIL = "noreply@heavenlyscentgrooming.pages.dev";
 const FROM_NAME  = "Heavenly Scent Grooming Website";
 
@@ -60,7 +62,7 @@ export async function sendLeadNotification(env, lead) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       personalizations: [{
-        to: [{ email: JILL_EMAIL, name: JILL_NAME }],
+        to: RECIPIENTS,
         reply_to: { email: lead.email, name: fullName },
       }],
       from:    { email: FROM_EMAIL, name: FROM_NAME },
