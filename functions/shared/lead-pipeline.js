@@ -8,7 +8,7 @@
 import { sendViaGmailSmtp } from "./gmail-smtp.js";
 
 const LEAD_RECIPIENTS = [
-  "heavenlyscentgrooming@gmail.com",
+  "heavenlyscentmobile@gmail.com",
   "ramayan@ebonyiris.com",
 ];
 
