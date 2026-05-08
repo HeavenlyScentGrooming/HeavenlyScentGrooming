@@ -1,6 +1,6 @@
 /**
- * POST /api/contact — save lead to D1, email Jill via MailChannels (free, no password).
- * Reply-To is set to the form submitter so Jill hits Reply and it goes to them.
+ * POST /api/contact — save lead to D1, email recipients via Gmail SMTP.
+ * Reply-To is set to the form submitter so a Reply goes back to them.
  * Requires: D1 binding as DB (hsg-leads database).
  */
 
@@ -85,7 +85,7 @@ export async function onRequest(context) {
     try {
       await sendLeadNotification(env, row);
     } catch (mailErr) {
-      console.error("MailChannels error:", mailErr);
+      console.error("Lead notification email failed:", mailErr);
       return new Response(
         JSON.stringify({
           success: false,
