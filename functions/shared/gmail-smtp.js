@@ -48,8 +48,8 @@ function encodeSubject(subject) {
  * @param {object} opts
  * @param {string} opts.fromEmail
  * @param {string} opts.fromName
- * @param {string} opts.to
- * @param {string} [opts.toName]
+ * @param {string|string[]} opts.to               — single address or array of addresses
+ * @param {string} [opts.toName]                  — display name (used only when `to` is a single string)
  * @param {string} [opts.replyTo]
  * @param {string} [opts.replyToName]
  * @param {string} opts.subject
@@ -119,8 +119,11 @@ export async function sendViaGmailSmtp(env, opts) {
   r = await cmd(`MAIL FROM:<${fromEmail}>`);
   if (!/^250/.test(r)) throw new Error("MAIL FROM failed: " + r);
 
-  r = await cmd(`RCPT TO:<${opts.to}>`);
-  if (!/^250/.test(r)) throw new Error("RCPT TO failed: " + r);
+  const recipients = Array.isArray(opts.to) ? opts.to : [opts.to];
+  for (const addr of recipients) {
+    r = await cmd(`RCPT TO:<${addr}>`);
+    if (!/^250/.test(r)) throw new Error(`RCPT TO <${addr}> failed: ${r}`);
+  }
 
   r = await cmd("DATA");
   if (!/^354/.test(r)) throw new Error("DATA not accepted: " + r);
@@ -150,9 +153,15 @@ function buildMimeMessage(opts) {
   const subject = encodeSubject(opts.subject);
   const date = new Date().toUTCString();
 
+  const toHeader = Array.isArray(opts.to)
+    ? opts.to.join(", ")
+    : opts.toName
+      ? `${opts.toName} <${opts.to}>`
+      : opts.to;
+
   let headers = [
     `From: ${fromName} <${opts.fromEmail}>`,
-    opts.toName ? `To: ${opts.toName} <${opts.to}>` : `To: ${opts.to}`,
+    `To: ${toHeader}`,
     `Subject: ${subject}`,
     `Date: ${date}`,
     "MIME-Version: 1.0",
