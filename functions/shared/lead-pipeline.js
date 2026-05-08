@@ -102,8 +102,9 @@ function esc(s) {
  * Immediate lead notification (HTML + plain). Reply-To = customer email.
  */
 export async function sendLeadNotification(env, lead) {
-  const fromEmail = env.GMAIL_SMTP_USER?.trim();
-  if (!fromEmail) throw new Error("GMAIL_SMTP_USER is not set.");
+  const authUser = env.GMAIL_SMTP_USER?.trim();
+  if (!authUser) throw new Error("GMAIL_SMTP_USER is not set.");
+  const fromEmail = env.GMAIL_FROM_EMAIL?.trim() || authUser;
 
   const fullName = `${lead.first_name} ${lead.last_name}`.trim() || "(no name)";
   const subject = `New appointment request — ${lead.service_type} — ${fullName}`;
@@ -168,8 +169,9 @@ export async function sendLeadsCsvDigest(env) {
   const db = env.DB;
   if (!db) throw new Error("D1 binding DB missing");
 
-  const fromEmail = env.GMAIL_SMTP_USER?.trim();
-  if (!fromEmail) throw new Error("GMAIL_SMTP_USER is not set.");
+  const authUser = env.GMAIL_SMTP_USER?.trim();
+  if (!authUser) throw new Error("GMAIL_SMTP_USER is not set.");
+  const fromEmail = env.GMAIL_FROM_EMAIL?.trim() || authUser;
 
   const rows = await fetchAllLeads(db);
   const csv = leadsToCsv(rows);
