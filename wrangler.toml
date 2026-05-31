@@ -8,7 +8,7 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "hsg-leads"
-database_id = "1f97b12b-e938-4f7c-a3d8-6c9adcd6ffa9"
+database_id = "b8db3d1b-d122-4fea-8c9a-02f4e8a1cada"
 
 # Uncomment to store cron in repo (or add the same schedule under Triggers in the dashboard):
 # [triggers]
