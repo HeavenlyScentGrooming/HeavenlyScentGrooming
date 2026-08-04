@@ -245,7 +245,55 @@ def check_html(root, host, r, primary_only=True):
             if a in h:
                 r.fail(f"{rel}: analytics/tracking referenced ({a})")
 
+        check_static_rendering(rel, h, r)
         check_contact_parity(rel, h, r)
+
+
+def visible_text(html):
+    """Approximate what a crawler reads: body text minus script, style, noscript."""
+    m = re.search(r"<body[^>]*>(.*)</body>", html, re.S | re.I)
+    body = m.group(1) if m else html
+    for tag in ("script", "style", "noscript", "template"):
+        body = re.sub(rf"<{tag}\b.*?</{tag}>", " ", body, flags=re.S | re.I)
+    body = re.sub(r"<!--.*?-->", " ", body, flags=re.S)
+    body = re.sub(r"<[^>]+>", " ", body)
+    return re.sub(r"\s+", " ", body).strip()
+
+
+def check_static_rendering(rel, h, r):
+    """The protocol's blocking gate: primary content must be in server-rendered HTML.
+
+    This is the single most important check in the spec, and the easiest one for a
+    file-level audit to skip, because a client-rendered SPA can carry a perfect
+    robots.txt, sitemap, schema and headers while serving a visitor-facing page of
+    almost no text. Every other PASS is misleading if this fails.
+
+    A <noscript> fallback deliberately does NOT count. The gate is about what the
+    page renders, and noscript is not rendered when JS is enabled.
+    """
+    words = len(visible_text(h).split())
+    spa_root = re.search(r'<div[^>]+id=["\'](root|app|__next)["\'][^>]*>\s*</div>', h, re.I)
+
+    if words < 100:
+        detail = (f"only {words} words of server-rendered text"
+                  + (" and an empty SPA mount point" if spa_root else ""))
+        exemption = os.environ.get("AEO_SPA_EXEMPTION", "").strip()
+        if exemption:
+            # Explicit, visible, owner-acknowledged. Never silent: the site is
+            # still non-compliant and the message says so. This exists so a known
+            # architectural failure does not block PRs that improve the site,
+            # not so the failure can be forgotten.
+            r.warn(f"{rel}: BLOCKING GATE FAILS ({detail}). "
+                   f"NOT COMPLIANT. Exempted in config: {exemption}")
+        else:
+            r.fail(f"{rel}: BLOCKING GATE - {detail}. Primary content is "
+                   "client-rendered; the site is not compliant regardless of any "
+                   "other check passing.")
+    elif spa_root:
+        r.warn(f"{rel}: empty SPA mount point present alongside {words} words of "
+               f"static text; confirm primary content is not hydrated client-side")
+    else:
+        r.ok(f"{rel}: static rendering gate, {words} words of server-rendered text")
 
 
 def check_alt_text(rel, h, r):
