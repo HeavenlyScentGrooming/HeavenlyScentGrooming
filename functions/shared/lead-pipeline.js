@@ -9,7 +9,6 @@ import { sendViaGmailSmtp } from "./gmail-smtp.js";
 
 const LEAD_RECIPIENTS = [
   "heavenlyscentmobile@gmail.com",
-  "ramayan@ebonyiris.com",
 ];
 
 export function csvEscape(value) {
